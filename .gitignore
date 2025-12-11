@@ -1,0 +1,39 @@
+# Environment files
+.env
+.env.local
+.env.*.local
+docker/.env
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor directories
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+
+# Certificates (keep examples)
+*.pem
+*.key
+*.crt
+!*.example.pem
+!*.example.key
+!*.example.crt
+
+# Backup files
+*.bak
+*.backup
+
+# Docker data (if stored locally)
+data/

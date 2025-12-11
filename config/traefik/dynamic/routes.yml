@@ -1,0 +1,58 @@
+# Traefik Dynamic Configuration
+
+http:
+  middlewares:
+    # Rate limiting
+    ratelimit:
+      rateLimit:
+        average: 100
+        burst: 50
+        period: 1m
+
+    # Security headers
+    security-headers:
+      headers:
+        frameDeny: true
+        browserXssFilter: true
+        contentTypeNosniff: true
+        referrerPolicy: "strict-origin-when-cross-origin"
+        customResponseHeaders:
+          X-Robots-Tag: "noindex, nofollow"
+
+    # CORS for API
+    cors:
+      headers:
+        accessControlAllowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+        accessControlAllowHeaders:
+          - Content-Type
+          - Authorization
+          - Accept-Language
+        accessControlAllowOriginList:
+          - "http://localhost:5173"
+          - "http://localhost:3000"
+        accessControlMaxAge: 100
+        addVaryHeader: true
+
+    # Compression
+    compress:
+      compress: {}
+
+  # Chain middlewares
+  middlewares:
+    api-chain:
+      chain:
+        middlewares:
+          - ratelimit
+          - cors
+          - security-headers
+
+    web-chain:
+      chain:
+        middlewares:
+          - compress
+          - security-headers

@@ -1,0 +1,72 @@
+name: Validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate-docker-compose:
+    name: Validate Docker Compose
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate docker-compose.yml
+        run: docker compose -f docker/docker-compose.yml config --quiet
+
+      - name: Validate docker-compose.services.yml
+        run: docker compose -f docker/docker-compose.services.yml config --quiet
+
+      - name: Validate docker-compose.dev.yml
+        run: docker compose -f docker/docker-compose.yml -f docker/docker-compose.dev.yml config --quiet
+
+  validate-yaml:
+    name: Validate YAML Files
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install yamllint
+        run: pip install yamllint
+
+      - name: Lint YAML files
+        run: |
+          yamllint -d relaxed config/traefik/*.yml
+          yamllint -d relaxed config/traefik/dynamic/*.yml
+
+  validate-json:
+    name: Validate JSON Files
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate JSON files
+        run: |
+          for file in $(find . -name "*.json" -type f); do
+            echo "Validating $file"
+            python -m json.tool "$file" > /dev/null
+          done
+
+  markdown-lint:
+    name: Lint Markdown
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Lint Markdown
+        uses: DavidAnson/markdownlint-cli2-action@v14
+        with:
+          globs: |
+            docs/**/*.md
+            README.md
+        continue-on-error: true

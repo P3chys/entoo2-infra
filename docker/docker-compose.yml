@@ -1,0 +1,229 @@
+version: "3.9"
+
+name: entoo2
+
+services:
+  # ============================================
+  # REVERSE PROXY
+  # ============================================
+  traefik:
+    image: traefik:v3.0
+    container_name: entoo2-traefik
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080" # Dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ../config/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ../config/traefik/dynamic:/etc/traefik/dynamic:ro
+      - traefik-certs:/letsencrypt
+    networks:
+      - entoo2-network
+    labels:
+      - "traefik.enable=true"
+
+  # ============================================
+  # DATABASE
+  # ============================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: entoo2-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-entoo2}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-entoo2_dev}
+      POSTGRES_DB: ${POSTGRES_DB:-entoo2}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ../config/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "5432:5432"
+    networks:
+      - entoo2-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-entoo2} -d ${POSTGRES_DB:-entoo2}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================
+  # CACHE
+  # ============================================
+  redis:
+    image: redis:7-alpine
+    container_name: entoo2-redis
+    restart: unless-stopped
+    command: redis-server --requirepass ${REDIS_PASSWORD:-redis_dev}
+    volumes:
+      - redis-data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - entoo2-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-redis_dev}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================
+  # FILE STORAGE
+  # ============================================
+  minio:
+    image: minio/minio:latest
+    container_name: entoo2-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    volumes:
+      - minio-data:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    networks:
+      - entoo2-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  # MinIO initialization (creates buckets)
+  minio-init:
+    image: minio/mc:latest
+    container_name: entoo2-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set entoo2 http://minio:9000 ${MINIO_ROOT_USER:-minioadmin} ${MINIO_ROOT_PASSWORD:-minioadmin};
+      mc mb entoo2/documents --ignore-existing;
+      mc mb entoo2/avatars --ignore-existing;
+      mc mb entoo2/temp --ignore-existing;
+      mc anonymous set download entoo2/avatars;
+      exit 0;
+      "
+    networks:
+      - entoo2-network
+
+  # ============================================
+  # SEARCH ENGINE
+  # ============================================
+  meilisearch:
+    image: getmeili/meilisearch:v1.6
+    container_name: entoo2-meilisearch
+    restart: unless-stopped
+    environment:
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:-dev_master_key_change_in_production}
+      MEILI_ENV: development
+    volumes:
+      - meilisearch-data:/meili_data
+    ports:
+      - "7700:7700"
+    networks:
+      - entoo2-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7700/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ============================================
+  # CONTENT EXTRACTION
+  # ============================================
+  tika:
+    image: apache/tika:2.9.1.0
+    container_name: entoo2-tika
+    restart: unless-stopped
+    ports:
+      - "9998:9998"
+    networks:
+      - entoo2-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9998/tika"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ============================================
+  # BACKEND API
+  # ============================================
+  backend:
+    build:
+      context: ../../entoo2-api
+      dockerfile: Dockerfile
+    container_name: entoo2-backend
+    restart: unless-stopped
+    environment:
+      PORT: 8000
+      GIN_MODE: release
+      DATABASE_URL: postgres://${POSTGRES_USER:-entoo2}:${POSTGRES_PASSWORD:-entoo2_dev}@postgres:5432/${POSTGRES_DB:-entoo2}?sslmode=disable
+      REDIS_URL: redis://:${REDIS_PASSWORD:-redis_dev}@redis:6379/0
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      MINIO_BUCKET: documents
+      MINIO_USE_SSL: "false"
+      MEILI_URL: http://meilisearch:7700
+      MEILI_API_KEY: ${MEILI_MASTER_KEY:-dev_master_key_change_in_production}
+      TIKA_URL: http://tika:9998
+      JWT_SECRET: ${JWT_SECRET:-change_this_in_production}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      meilisearch:
+        condition: service_healthy
+      tika:
+        condition: service_healthy
+    networks:
+      - entoo2-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=Host(`localhost`) && PathPrefix(`/api`)"
+      - "traefik.http.services.backend.loadbalancer.server.port=8000"
+
+  # ============================================
+  # FRONTEND
+  # ============================================
+  frontend:
+    build:
+      context: ../../entoo2-web
+      dockerfile: Dockerfile
+    container_name: entoo2-frontend
+    restart: unless-stopped
+    environment:
+      PUBLIC_API_URL: http://localhost/api/v1
+    depends_on:
+      - backend
+    networks:
+      - entoo2-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`localhost`)"
+      - "traefik.http.services.frontend.loadbalancer.server.port=3000"
+
+# ============================================
+# NETWORKS
+# ============================================
+networks:
+  entoo2-network:
+    driver: bridge
+
+# ============================================
+# VOLUMES
+# ============================================
+volumes:
+  postgres-data:
+  redis-data:
+  minio-data:
+  meilisearch-data:
+  traefik-certs:

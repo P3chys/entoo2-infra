@@ -1,0 +1,12 @@
+# Default owners for everything in the repo
+* @P3chys
+
+# Documentation
+/docs/ @P3chys
+
+# Docker configuration
+/docker/ @P3chys
+/config/ @P3chys
+
+# GitHub workflows
+/.github/ @P3chys

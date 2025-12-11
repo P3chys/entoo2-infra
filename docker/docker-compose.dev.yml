@@ -1,0 +1,33 @@
+version: "3.9"
+
+# Development overrides
+# Use with: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+services:
+  backend:
+    build:
+      context: ../../entoo2-api
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ../../entoo2-api:/app
+    environment:
+      GIN_MODE: debug
+    ports:
+      - "8000:8000"
+    labels:
+      - "traefik.http.routers.backend.rule=Host(`localhost`) && PathPrefix(`/api`)"
+
+  frontend:
+    build:
+      context: ../../entoo2-web
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ../../entoo2-web:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    environment:
+      PUBLIC_API_URL: http://localhost:8000/api/v1
+    labels:
+      - "traefik.http.routers.frontend.rule=Host(`localhost`)"
+      - "traefik.http.services.frontend.loadbalancer.server.port=5173"

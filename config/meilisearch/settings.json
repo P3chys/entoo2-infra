@@ -1,0 +1,62 @@
+{
+  "indexes": {
+    "documents": {
+      "primaryKey": "id",
+      "searchableAttributes": [
+        "content_text",
+        "original_name",
+        "filename"
+      ],
+      "filterableAttributes": [
+        "subject_id",
+        "uploaded_by",
+        "mime_type",
+        "created_at"
+      ],
+      "sortableAttributes": [
+        "created_at",
+        "file_size",
+        "original_name"
+      ],
+      "rankingRules": [
+        "words",
+        "typo",
+        "proximity",
+        "attribute",
+        "sort",
+        "exactness"
+      ],
+      "typoTolerance": {
+        "enabled": true,
+        "minWordSizeForTypos": {
+          "oneTypo": 4,
+          "twoTypos": 8
+        }
+      },
+      "pagination": {
+        "maxTotalHits": 1000
+      }
+    },
+    "subjects": {
+      "primaryKey": "id",
+      "searchableAttributes": [
+        "name_cs",
+        "name_en",
+        "description_cs",
+        "description_en"
+      ],
+      "filterableAttributes": [
+        "semester_id",
+        "credits"
+      ],
+      "sortableAttributes": [
+        "name_cs",
+        "name_en",
+        "credits"
+      ],
+      "typoTolerance": {
+        "enabled": true
+      }
+    }
+  }
+}
