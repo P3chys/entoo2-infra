@@ -173,6 +173,9 @@ services:
       MEILI_API_KEY: ${MEILI_MASTER_KEY:-dev_master_key_change_in_production}
       TIKA_URL: http://tika:9998
       JWT_SECRET: ${JWT_SECRET:-change_this_in_production}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@entoo2.local}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-AdminPassword123!}
+      ADMIN_NAME: ${ADMIN_NAME:-System Administrator}
     depends_on:
       postgres:
         condition: service_healthy
