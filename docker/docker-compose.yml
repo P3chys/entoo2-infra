@@ -183,7 +183,7 @@ services:
       meilisearch:
         condition: service_healthy
       tika:
-        condition: service_healthy
+        condition: service_started
     networks:
       - entoo2-network
     labels:
