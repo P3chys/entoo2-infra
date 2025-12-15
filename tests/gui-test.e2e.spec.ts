@@ -128,6 +128,55 @@ test.describe('Entoo2 Frontend GUI Tests', () => {
     await page.screenshot({ path: 'test-results/08-theme-check.png', fullPage: true });
   });
 
+  test('should toggle theme between light and dark', async ({ page }) => {
+    await page.goto('http://localhost:5173/login');
+    await page.waitForLoadState('networkidle');
+
+    // Get initial theme
+    const initialHasDarkClass = await page.evaluate(() => {
+      return document.documentElement.classList.contains('dark');
+    });
+    console.log('Initial theme has dark class:', initialHasDarkClass);
+
+    // Take screenshot of initial state
+    await page.screenshot({ path: 'test-results/09-theme-initial.png', fullPage: true });
+
+    // Find and click theme toggle button - look for button with sun/moon SVG icon
+    // The button is in the top right corner and contains an SVG with specific paths
+    const themeToggle = page.locator('button:has(svg path[d*="M12 3v1m0 16v1"]), button:has(svg path[d*="M20.354 15.354"])').first();
+    await themeToggle.click();
+
+    // Wait a bit for the change to apply
+    await page.waitForTimeout(500);
+
+    // Check if theme changed
+    const afterToggleHasDarkClass = await page.evaluate(() => {
+      return document.documentElement.classList.contains('dark');
+    });
+    console.log('After toggle, theme has dark class:', afterToggleHasDarkClass);
+
+    // Take screenshot after toggle
+    await page.screenshot({ path: 'test-results/10-theme-after-toggle.png', fullPage: true });
+
+    // Verify theme actually changed
+    expect(initialHasDarkClass).not.toBe(afterToggleHasDarkClass);
+
+    // Toggle again to return to original state
+    await themeToggle.click();
+    await page.waitForTimeout(500);
+
+    const afterSecondToggle = await page.evaluate(() => {
+      return document.documentElement.classList.contains('dark');
+    });
+    console.log('After second toggle, theme has dark class:', afterSecondToggle);
+
+    // Take screenshot after second toggle
+    await page.screenshot({ path: 'test-results/11-theme-after-second-toggle.png', fullPage: true });
+
+    // Verify theme returned to initial state
+    expect(afterSecondToggle).toBe(initialHasDarkClass);
+  });
+
   test('should show language selector', async ({ page }) => {
     await page.goto('http://localhost/login');
     await page.waitForLoadState('networkidle');

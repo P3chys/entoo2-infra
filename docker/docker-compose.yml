@@ -176,6 +176,8 @@ services:
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@entoo2.local}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-AdminPassword123!}
       ADMIN_NAME: ${ADMIN_NAME:-System Administrator}
+    volumes:
+      - E:/old_entoo:/old_entoo:ro
     depends_on:
       postgres:
         condition: service_healthy
