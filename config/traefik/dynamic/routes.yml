@@ -35,6 +35,9 @@ http:
         accessControlAllowOriginList:
           - "http://localhost:5173"
           - "http://localhost:3000"
+          - "http://localhost"
+          - "http://192.168.1.105"
+          - "http://entoo2.local"
         accessControlMaxAge: 100
         addVaryHeader: true
 
@@ -42,8 +45,7 @@ http:
     compress:
       compress: {}
 
-  # Chain middlewares
-  middlewares:
+    # Chain middlewares
     api-chain:
       chain:
         middlewares:

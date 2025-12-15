@@ -193,7 +193,7 @@ services:
       - entoo2-network
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=Host(`localhost`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.backend.rule=(Host(`localhost`) || Host(`192.168.1.105`) || Host(`entoo2.local`)) && PathPrefix(`/api`)"
       - "traefik.http.services.backend.loadbalancer.server.port=8000"
 
   # ============================================
@@ -206,14 +206,14 @@ services:
     container_name: entoo2-frontend
     restart: unless-stopped
     environment:
-      PUBLIC_API_URL: http://localhost/api/v1
+      PUBLIC_API_URL: /api/v1
     depends_on:
       - backend
     networks:
       - entoo2-network
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.frontend.rule=Host(`localhost`)"
+      - "traefik.http.routers.frontend.rule=Host(`localhost`) || Host(`192.168.1.105`) || Host(`entoo2.local`) || Host(`DESKTOP-EL8RS5F.local`) "
       - "traefik.http.services.frontend.loadbalancer.server.port=3000"
 
 # ============================================
