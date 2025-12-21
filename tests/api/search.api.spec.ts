@@ -51,6 +51,8 @@ test.describe('Search API', () => {
       const body = await response.json();
       expect(body.success).toBe(true);
       expect(body.data).toBeDefined();
+      // New response format should have documents and/or subjects
+      expect(body.data.documents !== undefined || body.data.subjects !== undefined).toBe(true);
     });
 
     test('should support type filter for documents', async ({ request }) => {
@@ -171,6 +173,58 @@ test.describe('Search API', () => {
       }
 
       expect(response.status()).toBe(400);
+    });
+
+    test('should support exact match mode', async ({ request }) => {
+      if (!authToken) {
+        test.skip(true, 'Auth token not available');
+      }
+
+      const response = await request.get(
+        `${API_URL}/api/v1/search?q=test&exact=true`,
+        {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+        }
+      );
+
+      if (response.status() === 404) {
+        test.skip(true, 'API not running');
+      }
+
+      expect(response.status()).toBe(200);
+
+      const body = await response.json();
+      expect(body.success).toBe(true);
+    });
+
+    test('should support mime type filter', async ({ request }) => {
+      if (!authToken) {
+        test.skip(true, 'Auth token not available');
+      }
+
+      const response = await request.get(
+        `${API_URL}/api/v1/search?q=test&mime_type=application/pdf`,
+        {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+        }
+      );
+
+      if (response.status() === 404) {
+        test.skip(true, 'API not running');
+      }
+
+      expect(response.status()).toBe(200);
+
+      const body = await response.json();
+      expect(body.success).toBe(true);
+      // When filtering by mime_type, only documents should be returned
+      if (body.data.documents && body.data.documents.length > 0) {
+        expect(body.data.documents.every((doc: any) => doc.mime_type === 'application/pdf')).toBe(true);
+      }
     });
   });
 });

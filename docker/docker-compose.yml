@@ -193,7 +193,8 @@ services:
       - entoo2-network
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=(Host(`localhost`) || Host(`192.168.1.105`) || Host(`entoo2.local`)) && PathPrefix(`/api`)"
+      - "traefik.http.routers.backend.rule=PathPrefix(`/api`)"
+      - "traefik.http.routers.backend.priority=1000"
       - "traefik.http.services.backend.loadbalancer.server.port=8000"
 
   # ============================================
