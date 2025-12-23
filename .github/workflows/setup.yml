@@ -89,25 +89,25 @@ jobs:
 
           # Database
           POSTGRES_USER=entoo2
-          POSTGRES_PASSWORD=$(openssl rand -base64 24)
+          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
           POSTGRES_DB=entoo2
 
           # Redis
-          REDIS_PASSWORD=$(openssl rand -base64 24)
+          REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
 
           # MinIO
           MINIO_ROOT_USER=entoo2admin
-          MINIO_ROOT_PASSWORD=$(openssl rand -base64 24)
+          MINIO_ROOT_PASSWORD=${{ secrets.MINIO_ROOT_PASSWORD }}
 
           # Meilisearch
-          MEILI_MASTER_KEY=$(openssl rand -base64 24)
+          MEILI_MASTER_KEY=${{ secrets.MEILI_MASTER_KEY }}
 
           # JWT
-          JWT_SECRET=$(openssl rand -base64 48)
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
 
           # Admin
-          ADMIN_EMAIL=admin@entoo2.local
-          ADMIN_PASSWORD=Admin2024SecurePassword!
+          ADMIN_EMAIL=${{ secrets.ADMIN_EMAIL }}
+          ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}
           ADMIN_NAME=System Administrator
           EOF
 
