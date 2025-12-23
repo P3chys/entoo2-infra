@@ -1,6 +1,7 @@
 version: "3.9"
 
 name: entoo2
+# AG-FIX-TIMESTAMP: 2025-12-23T23:05:00Z
 
 services:
   # ============================================
@@ -176,6 +177,8 @@ services:
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@entoo2.local}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-AdminPassword123!}
       ADMIN_NAME: ${ADMIN_NAME:-System Administrator}
+      CORS_ORIGINS: "http://localhost:5173,http://localhost:3000,http://${SERVER_IP},http://${SERVER_IP}:3000"
+      # AG-FIX-MARKER-BACKEND
     volumes:
       - E:/old_entoo:/old_entoo:ro
     depends_on:
@@ -207,7 +210,8 @@ services:
     container_name: entoo2-frontend
     restart: unless-stopped
     environment:
-      PUBLIC_API_URL: /api/v1
+      PUBLIC_API_URL: http://46.224.113.48:8000
+      # AG-FIX-MARKER-FRONTEND
       ORIGIN: http://46.224.113.48
       BODY_SIZE_LIMIT: Infinity
     depends_on:

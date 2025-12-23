@@ -1,6 +1,7 @@
 version: "3.9"
 
 name: entoo2
+# AG-FIX-TIMESTAMP: 2025-12-23T23:05:00Z
 
 services:
   postgres:
@@ -140,6 +141,7 @@ services:
       - "80:3000"
     environment:
       PUBLIC_API_URL: http://${SERVER_IP}:8000
+      # AG-FIX-MARKER-FRONTEND
       NODE_ENV: production
     depends_on:
       - backend
