@@ -208,13 +208,15 @@ services:
     restart: unless-stopped
     environment:
       PUBLIC_API_URL: /api/v1
+      ORIGIN: http://46.224.113.48
+      BODY_SIZE_LIMIT: Infinity
     depends_on:
       - backend
     networks:
       - entoo2-network
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.frontend.rule=Host(`localhost`) || Host(`192.168.1.105`) || Host(`entoo2.local`) || Host(`DESKTOP-EL8RS5F.local`) "
+      - "traefik.http.routers.frontend.rule=Host(`localhost`) || Host(`192.168.1.105`) || Host(`entoo2.local`) || Host(`DESKTOP-EL8RS5F.local`) || Host(`46.224.113.48`)"
       - "traefik.http.services.frontend.loadbalancer.server.port=3000"
 
 # ============================================
