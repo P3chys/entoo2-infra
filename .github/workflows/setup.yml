@@ -35,9 +35,18 @@ jobs:
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r' > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H ${{ inputs.server_ip }} >> ~/.ssh/known_hosts
+
+          # Verify key format
+          echo "Verifying SSH key..."
+          ssh-keygen -l -f ~/.ssh/deploy_key || {
+            echo "Error: Invalid SSH key format"
+            echo "Key contents (first line):"
+            head -1 ~/.ssh/deploy_key
+            exit 1
+          }
 
       - name: Install Docker on server
         run: |
