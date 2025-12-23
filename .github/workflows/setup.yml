@@ -1,0 +1,142 @@
+name: Setup Hetzner Server
+
+on:
+  workflow_dispatch:
+    inputs:
+      server_ip:
+        description: 'Hetzner server IP address'
+        required: true
+        default: '46.224.113.48'
+
+jobs:
+  setup:
+    name: Complete Server Setup
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout infrastructure
+        uses: actions/checkout@v4
+        with:
+          repository: P3chys/entoo2-infra
+          path: entoo2-infra
+
+      - name: Checkout API
+        uses: actions/checkout@v4
+        with:
+          repository: P3chys/entoo2-api
+          path: entoo2-api
+
+      - name: Checkout Web
+        uses: actions/checkout@v4
+        with:
+          repository: P3chys/entoo2-web
+          path: entoo2-web
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ inputs.server_ip }} >> ~/.ssh/known_hosts
+
+      - name: Install Docker on server
+        run: |
+          ssh -i ~/.ssh/deploy_key ${{ secrets.SSH_USER }}@${{ inputs.server_ip }} << 'ENDSSH'
+          set -e
+
+          # Update system
+          apt update && apt upgrade -y
+
+          # Install dependencies
+          apt install -y apt-transport-https ca-certificates curl software-properties-common gnupg lsb-release ufw
+
+          # Install Docker if not present
+          if ! command -v docker &> /dev/null; then
+            curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+            echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+            apt update
+            apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+            systemctl start docker
+            systemctl enable docker
+          fi
+
+          # Configure firewall
+          ufw --force enable
+          ufw allow 22/tcp
+          ufw allow 80/tcp
+          ufw allow 8000/tcp
+
+          # Create directories
+          mkdir -p /opt/entoo2/{config/traefik/dynamic,backups}
+
+          echo "✓ Server setup complete"
+          ENDSSH
+
+      - name: Copy configuration files
+        run: |
+          scp -i ~/.ssh/deploy_key entoo2-infra/docker/docker-compose.simple.yml ${{ secrets.SSH_USER }}@${{ inputs.server_ip }}:/opt/entoo2/docker-compose.yml
+          scp -i ~/.ssh/deploy_key entoo2-infra/.env.production ${{ secrets.SSH_USER }}@${{ inputs.server_ip }}:/opt/entoo2/.env
+
+      - name: Build and deploy images
+        run: |
+          ssh -i ~/.ssh/deploy_key ${{ secrets.SSH_USER }}@${{ inputs.server_ip }} << 'ENDSSH'
+          set -e
+          cd /opt/entoo2
+
+          # Clone repos
+          cd /tmp
+          rm -rf entoo2-api entoo2-web
+          git clone https://github.com/P3chys/entoo2-api.git
+          git clone https://github.com/P3chys/entoo2-web.git
+
+          # Build images
+          cd /tmp/entoo2-api
+          docker build -t ghcr.io/p3chys/entoo2-api:latest -f Dockerfile .
+
+          cd /tmp/entoo2-web
+          docker build -t ghcr.io/p3chys/entoo2-web:latest -f Dockerfile .
+
+          # Clean up
+          rm -rf /tmp/entoo2-api /tmp/entoo2-web
+
+          # Start services
+          cd /opt/entoo2
+          docker compose up -d
+
+          echo "✓ Deployment complete"
+          ENDSSH
+
+      - name: Setup backup cron
+        run: |
+          ssh -i ~/.ssh/deploy_key ${{ secrets.SSH_USER }}@${{ inputs.server_ip }} << 'ENDSSH'
+          cat > /opt/entoo2/backup.sh << 'EOF'
+          #!/bin/bash
+          BACKUP_DIR="/opt/entoo2/backups"
+          DATE=$(date +%Y%m%d_%H%M%S)
+          mkdir -p $BACKUP_DIR
+          docker exec entoo2-postgres pg_dump -U entoo2 entoo2 > $BACKUP_DIR/db_$DATE.sql 2>/dev/null && gzip $BACKUP_DIR/db_$DATE.sql
+          find $BACKUP_DIR -name "*.sql.gz" -mtime +7 -delete
+          EOF
+
+          chmod +x /opt/entoo2/backup.sh
+          (crontab -l 2>/dev/null | grep -v backup.sh; echo "0 2 * * * /opt/entoo2/backup.sh") | crontab -
+          ENDSSH
+
+      - name: Verify deployment
+        run: |
+          ssh -i ~/.ssh/deploy_key ${{ secrets.SSH_USER }}@${{ inputs.server_ip }} << 'ENDSSH'
+          cd /opt/entoo2
+          docker compose ps
+
+          echo ""
+          echo "======================================"
+          echo "Setup Complete!"
+          echo "======================================"
+          echo "Frontend: http://${{ inputs.server_ip }}"
+          echo "API: http://${{ inputs.server_ip }}:8000"
+          echo "======================================"
+          ENDSSH
+
+      - name: Cleanup
+        if: always()
+        run: rm -f ~/.ssh/deploy_key
