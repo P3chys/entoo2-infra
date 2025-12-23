@@ -81,10 +81,40 @@ jobs:
           echo "✓ Server setup complete"
           ENDSSH
 
+      - name: Create environment file
+        run: |
+          cat > .env.production << EOF
+          # Production Environment
+          SERVER_IP=${{ inputs.server_ip }}
+
+          # Database
+          POSTGRES_USER=entoo2
+          POSTGRES_PASSWORD=$(openssl rand -base64 24)
+          POSTGRES_DB=entoo2
+
+          # Redis
+          REDIS_PASSWORD=$(openssl rand -base64 24)
+
+          # MinIO
+          MINIO_ROOT_USER=entoo2admin
+          MINIO_ROOT_PASSWORD=$(openssl rand -base64 24)
+
+          # Meilisearch
+          MEILI_MASTER_KEY=$(openssl rand -base64 24)
+
+          # JWT
+          JWT_SECRET=$(openssl rand -base64 48)
+
+          # Admin
+          ADMIN_EMAIL=admin@entoo2.local
+          ADMIN_PASSWORD=Admin2024SecurePassword!
+          ADMIN_NAME=System Administrator
+          EOF
+
       - name: Copy configuration files
         run: |
           scp -i ~/.ssh/deploy_key entoo2-infra/docker/docker-compose.simple.yml ${{ secrets.SSH_USER }}@${{ inputs.server_ip }}:/opt/entoo2/docker-compose.yml
-          scp -i ~/.ssh/deploy_key entoo2-infra/.env.production ${{ secrets.SSH_USER }}@${{ inputs.server_ip }}:/opt/entoo2/.env
+          scp -i ~/.ssh/deploy_key .env.production ${{ secrets.SSH_USER }}@${{ inputs.server_ip }}:/opt/entoo2/.env
 
       - name: Build and deploy images
         run: |
