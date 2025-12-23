@@ -106,6 +106,9 @@ jobs:
           # JWT
           JWT_SECRET=${{ secrets.JWT_SECRET }}
 
+          # Registry
+          GITHUB_REPOSITORY_OWNER=p3chys
+
           # Admin
           ADMIN_EMAIL=${{ secrets.ADMIN_EMAIL }}
           ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}

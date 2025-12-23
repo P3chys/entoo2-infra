@@ -1,5 +1,3 @@
-version: "3.9"
-
 name: entoo2
 
 services:
@@ -143,7 +141,7 @@ services:
   # BACKEND API
   # ============================================
   backend:
-    image: ${DOCKER_REGISTRY:-ghcr.io}/${GITHUB_REPOSITORY_OWNER:-entoo2}/entoo2-api:${IMAGE_TAG:-latest}
+    image: ${DOCKER_REGISTRY:-ghcr.io}/${GITHUB_REPOSITORY_OWNER:-p3chys}/entoo2-api:${IMAGE_TAG:-latest}
     container_name: entoo2-backend
     restart: unless-stopped
     environment:
@@ -190,7 +188,7 @@ services:
   # FRONTEND
   # ============================================
   frontend:
-    image: ${DOCKER_REGISTRY:-ghcr.io}/${GITHUB_REPOSITORY_OWNER:-entoo2}/entoo2-web:${IMAGE_TAG:-latest}
+    image: ${DOCKER_REGISTRY:-ghcr.io}/${GITHUB_REPOSITORY_OWNER:-p3chys}/entoo2-web:${IMAGE_TAG:-latest}
     container_name: entoo2-frontend
     restart: unless-stopped
     environment:
