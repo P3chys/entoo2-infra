@@ -73,6 +73,7 @@ jobs:
           ufw --force enable
           ufw allow 22/tcp
           ufw allow 80/tcp
+          ufw allow 443/tcp
           ufw allow 8000/tcp
 
           # Create directories
@@ -113,8 +114,9 @@ jobs:
 
       - name: Copy configuration files
         run: |
-          scp -i ~/.ssh/deploy_key entoo2-infra/docker/docker-compose.simple.yml ${{ secrets.SSH_USER }}@${{ inputs.server_ip }}:/opt/entoo2/docker-compose.yml
+          scp -i ~/.ssh/deploy_key entoo2-infra/docker/docker-compose.prod.yml ${{ secrets.SSH_USER }}@${{ inputs.server_ip }}:/opt/entoo2/docker-compose.yml
           scp -i ~/.ssh/deploy_key .env.production ${{ secrets.SSH_USER }}@${{ inputs.server_ip }}:/opt/entoo2/.env
+          scp -r -i ~/.ssh/deploy_key entoo2-infra/config ${{ secrets.SSH_USER }}@${{ inputs.server_ip }}:/opt/entoo2/
 
       - name: Build and deploy images
         run: |
@@ -171,8 +173,8 @@ jobs:
           echo "======================================"
           echo "Setup Complete!"
           echo "======================================"
-          echo "Frontend: http://${{ inputs.server_ip }}"
-          echo "API: http://${{ inputs.server_ip }}:8000"
+          echo "Frontend: https://${{ inputs.server_ip }} (or https://adampech.online)"
+          echo "API: https://${{ inputs.server_ip }}/api (or https://adampech.online/api)"
           echo "======================================"
           ENDSSH
 

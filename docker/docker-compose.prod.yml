@@ -12,11 +12,13 @@ services:
     restart: unless-stopped
     ports:
       - "80:80"
+      - "443:443"
       - "8080:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./config/traefik/traefik.prod.yml:/etc/traefik/traefik.yml:ro
       - ./config/traefik/dynamic:/etc/traefik/dynamic:ro
+      - traefik-certs:/letsencrypt
     networks:
       - entoo2-network
     labels:
@@ -176,10 +178,13 @@ services:
       - entoo2-network
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=PathPrefix(`/api`)"
+      - "traefik.http.routers.backend.rule=Host(`adampech.online`) && PathPrefix(`/api`)"
       - "traefik.http.routers.backend.priority=1000"
+      - "traefik.http.routers.backend.entrypoints=websecure"
+      - "traefik.http.routers.backend.tls.certresolver=letsencrypt"
       - "traefik.http.services.backend.loadbalancer.server.port=8000"
-      - "traefik.http.routers.backend.entrypoints=web"
+      - "traefik.http.routers.backend-http.rule=Host(`adampech.online`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.backend-http.entrypoints=web"
 
   # ============================================
   # FRONTEND
@@ -189,7 +194,8 @@ services:
     container_name: entoo2-frontend
     restart: unless-stopped
     environment:
-      PUBLIC_API_URL: /api/v1
+      PUBLIC_API_URL: https://adampech.online/api/v1
+      ORIGIN: https://adampech.online
       NODE_ENV: production
     depends_on:
       - backend
@@ -197,10 +203,13 @@ services:
       - entoo2-network
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.frontend.rule=Host(`adampech.online`)"
       - "traefik.http.routers.frontend.priority=1"
+      - "traefik.http.routers.frontend.entrypoints=websecure"
+      - "traefik.http.routers.frontend.tls.certresolver=letsencrypt"
       - "traefik.http.services.frontend.loadbalancer.server.port=3000"
-      - "traefik.http.routers.frontend.entrypoints=web"
+      - "traefik.http.routers.frontend-http.rule=Host(`adampech.online`)"
+      - "traefik.http.routers.frontend-http.entrypoints=web"
 
 # ============================================
 # NETWORKS
@@ -217,3 +226,4 @@ volumes:
   redis-data:
   minio-data:
   meilisearch-data:
+  traefik-certs:
