@@ -38,6 +38,7 @@ http:
           - "http://localhost"
           - "http://192.168.1.105"
           - "http://entoo2.local"
+          - "https://adampech.online"
         accessControlMaxAge: 100
         addVaryHeader: true
 

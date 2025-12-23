@@ -7,13 +7,12 @@ api:
 entryPoints:
   web:
     address: ":80"
-    # Disabled for development - enable in production
-    # http:
-    #   redirections:
-    #     entryPoint:
-    #       to: websecure
-    #       scheme: https
-    #       permanent: true
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+          permanent: true
   websecure:
     address: ":443"
 
@@ -29,7 +28,7 @@ providers:
 certificatesResolvers:
   letsencrypt:
     acme:
-      email: admin@example.com # Change this
+      email: admin@adampech.online
       storage: /letsencrypt/acme.json
       httpChallenge:
         entryPoint: web
