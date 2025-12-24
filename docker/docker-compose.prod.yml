@@ -163,10 +163,11 @@ services:
       ADMIN_NAME: ${ADMIN_NAME:-System Administrator}
       CORS_ORIGINS: "*"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://127.0.0.1:8000/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     depends_on:
       postgres:
         condition: service_healthy
@@ -184,11 +185,13 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=entoo2-network"
       - "traefik.http.routers.backend.rule=PathPrefix(`/api`)"
+      - "traefik.http.routers.backend.priority=1000"
       - "traefik.http.routers.backend.entrypoints=websecure"
       - "traefik.http.routers.backend.tls=true"
       - "traefik.http.routers.backend.tls.certresolver=letsencrypt"
       - "traefik.http.services.backend.loadbalancer.server.port=8000"
       - "traefik.http.routers.backend-http.rule=PathPrefix(`/api`)"
+      - "traefik.http.routers.backend-http.priority=1000"
       - "traefik.http.routers.backend-http.entrypoints=web"
 
   # ============================================
@@ -210,11 +213,13 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=entoo2-network"
       - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.frontend.priority=1"
       - "traefik.http.routers.frontend.entrypoints=websecure"
       - "traefik.http.routers.frontend.tls=true"
       - "traefik.http.routers.frontend.tls.certresolver=letsencrypt"
       - "traefik.http.services.frontend.loadbalancer.server.port=3000"
       - "traefik.http.routers.frontend-http.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.frontend-http.priority=1"
       - "traefik.http.routers.frontend-http.entrypoints=web"
 
 # ============================================
