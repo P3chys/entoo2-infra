@@ -10,7 +10,6 @@ entryPoints:
         entryPoint:
           to: websecure
           scheme: https
-          permanent: true
   websecure:
     address: ":443"
 
@@ -33,7 +32,5 @@ certificatesResolvers:
 
 log:
   level: INFO
-  format: json
 
-accessLog:
-  format: json
+accessLog: {}
