@@ -184,15 +184,13 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=entoo2-network"
-      - "traefik.http.routers.backend.rule=PathPrefix(`/api`)"
+      - "traefik.http.routers.backend.rule=Host(`adampech.online`) && PathPrefix(`/api`)"
       - "traefik.http.routers.backend.priority=1000"
       - "traefik.http.routers.backend.entrypoints=websecure"
       - "traefik.http.routers.backend.tls=true"
       - "traefik.http.routers.backend.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.backend.middlewares=api-chain@file"
       - "traefik.http.services.backend.loadbalancer.server.port=8000"
-      - "traefik.http.routers.backend-http.rule=PathPrefix(`/api`)"
-      - "traefik.http.routers.backend-http.priority=1000"
-      - "traefik.http.routers.backend-http.entrypoints=web"
 
   # ============================================
   # FRONTEND
@@ -212,15 +210,13 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=entoo2-network"
-      - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.frontend.rule=Host(`adampech.online`)"
       - "traefik.http.routers.frontend.priority=1"
       - "traefik.http.routers.frontend.entrypoints=websecure"
       - "traefik.http.routers.frontend.tls=true"
       - "traefik.http.routers.frontend.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.frontend.middlewares=web-chain@file"
       - "traefik.http.services.frontend.loadbalancer.server.port=3000"
-      - "traefik.http.routers.frontend-http.rule=PathPrefix(`/`)"
-      - "traefik.http.routers.frontend-http.priority=1"
-      - "traefik.http.routers.frontend-http.entrypoints=web"
 
 # ============================================
 # NETWORKS
