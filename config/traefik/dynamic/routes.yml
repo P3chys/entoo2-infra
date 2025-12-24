@@ -37,12 +37,8 @@ http:
           - Authorization
           - Accept-Language
         accessControlAllowOriginList:
-          - "http://localhost:5173"
-          - "http://localhost:3000"
-          - "http://localhost"
-          - "http://192.168.1.105"
-          - "http://entoo2.local"
           - "https://adampech.online"
+          - "https://www.adampech.online"
         accessControlMaxAge: 100
         addVaryHeader: true
 

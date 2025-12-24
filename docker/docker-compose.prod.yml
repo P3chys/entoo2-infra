@@ -160,7 +160,7 @@ services:
       ADMIN_EMAIL: ${ADMIN_EMAIL}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
       ADMIN_NAME: ${ADMIN_NAME:-System Administrator}
-      CORS_ORIGINS: "*"
+      CORS_ORIGINS: "https://adampech.online,https://www.adampech.online"
     healthcheck:
       test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://127.0.0.1:8000/health || exit 1"]
       interval: 15s
