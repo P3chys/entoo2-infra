@@ -18,6 +18,10 @@ http:
         referrerPolicy: "strict-origin-when-cross-origin"
         customResponseHeaders:
           X-Robots-Tag: "noindex, nofollow"
+        stsSeconds: 31536000
+        stsIncludeSubdomains: true
+        stsPreload: true
+        forceSTSHeader: true
 
     # CORS for API
     cors:
@@ -59,3 +63,15 @@ http:
         middlewares:
           - compress
           - security-headers
+
+tls:
+  options:
+    default:
+      minVersion: VersionTLS12
+      cipherSuites:
+        - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        - TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305
+        - TLS_AES_128_GCM_SHA256
+        - TLS_AES_256_GCM_SHA384
+        - TLS_CHACHA20_POLY1305_SHA256
