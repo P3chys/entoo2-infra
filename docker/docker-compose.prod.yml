@@ -188,6 +188,8 @@ services:
       - "traefik.http.routers.backend.entrypoints=websecure"
       - "traefik.http.routers.backend.tls=true"
       - "traefik.http.routers.backend.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.backend.tls.domains[0].main=adampech.online"
+      - "traefik.http.routers.backend.tls.domains[0].sans=www.adampech.online"
       - "traefik.http.routers.backend.middlewares=api-chain@file"
       - "traefik.http.services.backend.loadbalancer.server.port=8000"
 
@@ -214,6 +216,8 @@ services:
       - "traefik.http.routers.frontend.entrypoints=websecure"
       - "traefik.http.routers.frontend.tls=true"
       - "traefik.http.routers.frontend.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.frontend.tls.domains[0].main=adampech.online"
+      - "traefik.http.routers.frontend.tls.domains[0].sans=www.adampech.online"
       - "traefik.http.routers.frontend.middlewares=web-chain@file"
       - "traefik.http.services.frontend.loadbalancer.server.port=3000"
 
