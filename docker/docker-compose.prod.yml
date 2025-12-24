@@ -161,7 +161,12 @@ services:
       ADMIN_EMAIL: ${ADMIN_EMAIL}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
       ADMIN_NAME: ${ADMIN_NAME:-System Administrator}
-      CORS_ORIGINS: "https://adampech.online,http://46.224.113.48"
+      CORS_ORIGINS: "*"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     depends_on:
       postgres:
         condition: service_healthy
