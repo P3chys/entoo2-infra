@@ -114,13 +114,16 @@ jobs:
           ADMIN_EMAIL=${{ secrets.ADMIN_EMAIL }}
           ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}
           ADMIN_NAME=System Administrator
+
+          # Domain Configuration
+          DOMAIN=adampech.online
+          LETSENCRYPT_EMAIL=admin@adampech.online
           EOF
 
       - name: Copy configuration files
         run: |
-          scp -i ~/.ssh/deploy_key entoo2-infra/docker/docker-compose.prod.yml ${{ secrets.SSH_USER }}@${{ inputs.server_ip }}:/opt/entoo2/docker-compose.yml
+          scp -i ~/.ssh/deploy_key entoo2-infra/docker/docker-compose.yml ${{ secrets.SSH_USER }}@${{ inputs.server_ip }}:/opt/entoo2/docker-compose.yml
           scp -i ~/.ssh/deploy_key .env.production ${{ secrets.SSH_USER }}@${{ inputs.server_ip }}:/opt/entoo2/.env
-          scp -r -i ~/.ssh/deploy_key entoo2-infra/config ${{ secrets.SSH_USER }}@${{ inputs.server_ip }}:/opt/entoo2/
 
       - name: Build and deploy images
         run: |

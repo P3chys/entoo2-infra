@@ -1,33 +1,95 @@
-version: "3.9"
-
-# Development overrides
+# Development overrides for docker-compose.yml
 # Use with: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+# Make sure to have .env file in the parent directory (E:\StudentPortal\.env)
 
 services:
+  # Override Traefik for local development
+  traefik:
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # Remove the config file mounts - use command-line config instead
+    ports:
+      - "8080:8080"  # Traefik dashboard
+    command:
+      - "--api.insecure=true"
+      - "--api.dashboard=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--log.level=DEBUG"
+
+  # Backend with hot-reload
   backend:
     build:
       context: ../../entoo2-api
       dockerfile: Dockerfile.dev
+    env_file:
+      - ../../.env  # Load environment variables from root
     volumes:
       - ../../entoo2-api:/app
     environment:
       GIN_MODE: debug
+      CORS_ORIGINS: "http://localhost:5173,http://localhost:3000,http://localhost"
+      # Override with explicit DATABASE_URL construction
+      DATABASE_URL: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable"
+      REDIS_URL: "redis://:${REDIS_PASSWORD}@redis:6379/0"
+      MINIO_ENDPOINT: "minio:9000"
+      MINIO_ACCESS_KEY: "${MINIO_ROOT_USER}"
+      MINIO_SECRET_KEY: "${MINIO_ROOT_PASSWORD}"
+      MINIO_BUCKET: "documents"
+      MINIO_USE_SSL: "false"
+      MEILI_URL: "http://meilisearch:7700"
+      MEILI_API_KEY: "${MEILI_MASTER_KEY}"
+      TIKA_URL: "http://tika:9998"
+      JWT_SECRET: "${JWT_SECRET}"
     ports:
       - "8000:8000"
     labels:
       - "traefik.http.routers.backend.rule=Host(`localhost`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.backend.entrypoints=web"
+      - "traefik.http.routers.backend.tls=false"
+      - "traefik.http.routers.backend.priority=1000"
 
+  # Ensure all infrastructure services can access env vars
+  postgres:
+    env_file:
+      - ../../.env
+
+  redis:
+    env_file:
+      - ../../.env
+
+  minio:
+    env_file:
+      - ../../.env
+
+  meilisearch:
+    env_file:
+      - ../../.env
+
+  # Frontend with hot-reload
   frontend:
     build:
       context: ../../entoo2-web
       dockerfile: Dockerfile.dev
+    env_file:
+      - ../../.env  # Load environment variables from root
     volumes:
       - ../../entoo2-web:/app
-      - /app/node_modules
+      - frontend-node-modules:/app/node_modules  # Use named volume for platform-specific deps
     ports:
       - "5173:5173"
     environment:
+      API_URL: http://entoo2-backend:8000  # For Vite proxy in Docker
       PUBLIC_API_URL: http://localhost:8000/api/v1
+      ORIGIN: http://localhost:5173
+      NODE_ENV: development
     labels:
       - "traefik.http.routers.frontend.rule=Host(`localhost`)"
+      - "traefik.http.routers.frontend.entrypoints=web"
+      - "traefik.http.routers.frontend.tls=false"
+      - "traefik.http.routers.frontend.priority=1"
       - "traefik.http.services.frontend.loadbalancer.server.port=5173"
+
+volumes:
+  frontend-node-modules:
