@@ -169,6 +169,16 @@ services:
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
       ADMIN_NAME: ${ADMIN_NAME:-System Administrator}
       CORS_ORIGINS: "https://${DOMAIN},https://www.${DOMAIN}"
+      # SMTP Email Configuration
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USERNAME: ${SMTP_USERNAME}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL}
+      SMTP_FROM_NAME: ${SMTP_FROM_NAME}
+      APP_URL: ${APP_URL}
+      EMAIL_VERIFICATION_EXPIRY: ${EMAIL_VERIFICATION_EXPIRY:-24h}
+      PASSWORD_RESET_EXPIRY: ${PASSWORD_RESET_EXPIRY:-1h}
     healthcheck:
       test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://127.0.0.1:8000/health || exit 1"]
       interval: 15s
