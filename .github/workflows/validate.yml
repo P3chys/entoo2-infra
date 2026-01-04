@@ -93,13 +93,13 @@ jobs:
 
       - name: Start infrastructure services
         run: |
-          docker compose -f docker/docker-compose.yml up -d postgres redis minio meilisearch tika
+          docker compose -f docker/docker-compose.yml -f docker/docker-compose.ci.yml up -d postgres redis minio meilisearch tika
           echo "Waiting for services to be healthy..."
           sleep 30
 
       - name: Check service health
         run: |
-          docker compose -f docker/docker-compose.yml ps
+          docker compose -f docker/docker-compose.yml -f docker/docker-compose.ci.yml ps
           curl -sf http://localhost:7700/health || echo "Meilisearch not ready"
           curl -sf http://localhost:9000/minio/health/live || echo "MinIO not ready"
 
@@ -124,4 +124,4 @@ jobs:
 
       - name: Stop services
         if: always()
-        run: docker compose -f docker/docker-compose.yml down -v
+        run: docker compose -f docker/docker-compose.yml -f docker/docker-compose.ci.yml down -v

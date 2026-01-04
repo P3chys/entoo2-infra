@@ -1,0 +1,29 @@
+# Docker Compose override for CI testing
+# This file adds port mappings so Playwright tests can access services from the host
+
+services:
+  postgres:
+    ports:
+      - "5432:5432"
+
+  redis:
+    ports:
+      - "6379:6379"
+
+  minio:
+    ports:
+      - "9000:9000"  # API
+      - "9001:9001"  # Console
+
+  meilisearch:
+    ports:
+      - "7700:7700"
+
+  tika:
+    ports:
+      - "9998:9998"
+
+  traefik:
+    ports:
+      - "8000:80"    # HTTP (different port to avoid conflicts in CI)
+      - "8443:443"   # HTTPS
