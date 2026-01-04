@@ -7,7 +7,7 @@ Entoo2 uses PostgreSQL 16 as the primary database. The schema follows these conv
 - All tables use UUID primary keys
 - Timestamps use `TIMESTAMP WITH TIME ZONE`
 - Soft delete not implemented (hard delete with cascades)
-- Bilingual fields use `_cs` and `_en` suffixes
+- Czech language only (fields use `_cs` suffix for clarity)
 
 ## Entity Relationship Diagram
 
@@ -17,13 +17,13 @@ Entoo2 uses PostgreSQL 16 as the primary database. The schema follows these conv
 ├──────────────┤       ├──────────────┤       ├──────────────┤
 │ id (PK)      │       │ id (PK)      │◄──────│ id (PK)      │
 │ email        │       │ name_cs      │       │ semester_id  │
-│ password_hash│       │ name_en      │       │ name_cs      │
-│ role         │       │ order_index  │       │ name_en      │
-│ display_name │       │ created_at   │       │ description  │
-│ language     │       │ updated_at   │       │ credits      │
-│ created_at   │       └──────────────┘       │ created_at   │
-│ updated_at   │                              │ updated_at   │
-└──────────────┘                              └──────────────┘
+│ password_hash│       │ order_index  │       │ name_cs      │
+│ role         │       │ created_at   │       │ description  │
+│ display_name │       │ updated_at   │       │ credits      │
+│ language     │       └──────────────┘       │ created_at   │
+│ created_at   │                              │ updated_at   │
+│ updated_at   │                              └──────────────┘
+└──────────────┘
        │                                             │
        │    ┌────────────────────────────────────────┼────────────────────┐
        │    │                    │                   │                    │
@@ -43,9 +43,9 @@ Entoo2 uses PostgreSQL 16 as the primary database. The schema follows these conv
 │ subject_id   │                                     │            │ created_at   │
 │ teacher_name │                                     ▼            └──────────────┘
 │ topic_cs     │                              ┌──────────────┐
-│ topic_en     │                              │   answers    │
-│ created_at   │                              ├──────────────┤
-└──────────────┘                              │ id (PK)      │
+│ created_at   │                              │   answers    │
+└──────────────┘                              ├──────────────┤
+                                              │ id (PK)      │
                                               │ question_id  │
                                               │ user_id      │
                                               │ content      │
@@ -87,7 +87,6 @@ Organizes subjects into academic periods.
 CREATE TABLE semesters (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name_cs VARCHAR(100) NOT NULL,
-    name_en VARCHAR(100) NOT NULL,
     order_index INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -105,9 +104,7 @@ CREATE TABLE subjects (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     semester_id UUID NOT NULL REFERENCES semesters(id) ON DELETE CASCADE,
     name_cs VARCHAR(200) NOT NULL,
-    name_en VARCHAR(200) NOT NULL,
     description_cs TEXT,
-    description_en TEXT,
     credits INTEGER NOT NULL DEFAULT 0 CHECK (credits >= 0),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -126,7 +123,6 @@ CREATE TABLE subject_teachers (
     subject_id UUID NOT NULL REFERENCES subjects(id) ON DELETE CASCADE,
     teacher_name VARCHAR(200) NOT NULL,
     topic_cs VARCHAR(300),
-    topic_en VARCHAR(300),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
